@@ -1,4 +1,5 @@
 from models.UsuarioModel import UsuarioCriarModel
+from providers.AWSProvider import AWSProvider
 from repositories.UsuarioRepository import (
     criar_usuario,
     buscar_usuario_por_email,
@@ -8,12 +9,14 @@ from repositories.UsuarioRepository import (
     deletar_usuario
 )
 
+awsProvider = AWSProvider()
 
-async def registar_usuario(usuario: UsuarioCriarModel):
+
+async def registar_usuario(usuario: UsuarioCriarModel, caminho_foto):
     try:
         usuario_encontrado = await buscar_usuario_por_email(usuario.email)
 
-        if usuario:
+        if usuario_encontrado:
             return{
                 "mensagem": f'E-mail {usuario.email} já cadastrado no sistema',
                 "dados": "",
@@ -21,6 +24,15 @@ async def registar_usuario(usuario: UsuarioCriarModel):
             }
         else:
             novo_usuario = await criar_usuario(usuario)
+            try:
+                url_foto = awsProvider.upload_arquivo_s3(
+                    f'fotos-perfil/{novo_usuario["id"]}.png',
+                    caminho_foto
+                )
+
+                novo_usuario = await atualizar_usuario(novo_usuario["id"],{"foto": url_foto})
+            except Exception as erro:
+                print(erro)
 
             return {
                 "mensagem": "Usuário cadastrado com sucesso",

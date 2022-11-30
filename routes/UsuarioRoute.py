@@ -1,4 +1,7 @@
-from fastapi import APIRouter, Body, HTTPException, Depends, Header
+import os
+from datetime import datetime
+
+from fastapi import APIRouter, Body, HTTPException, Depends, Header, UploadFile
 
 from middlewares.JWTMiddelewares import verificar_token
 from models.UsuarioModel import UsuarioCriarModel
@@ -13,18 +16,22 @@ router = APIRouter()
 
 
 @router.post("/", response_description="Rota para criar um novo Usúario.")
-async def rota_criar_usuario(usuario: UsuarioCriarModel = Body(...)):
+async def rota_criar_usuario(file: UploadFile, usuario: UsuarioCriarModel = Depends(UsuarioCriarModel)):
     try:
-        resultado= await registar_usuario(usuario)
+        caminho_foto = f'files2/foto-{datetime.now().strftime("%H%M%S%")}.png'
+        with open(caminho_foto, 'wb+') as arquivo:
+            arquivo.write(file.file.read())
+
+        resultado= await registar_usuario(usuario, caminho_foto)
+
+        os.remove(caminho_foto)
 
         if not resultado['status'] == 201:
             raise HTTPException(status_code=resultado['status'], detail=resultado['mensagem'])
 
         return resultado
     except Exception as erro:
-        print(erro)
-
-        raise HTTPException(status_code=500, detail='Erro interno no servidor')
+        raise erro
 
 
 @router.get(
@@ -48,5 +55,5 @@ async def buscar_info_usuario_logado(Authorization: str = Header(default='')):
         if not resultado ['status'] == 200:
             raise HTTPException(status_code=resultado['status'], detail=resultado['mensagem'])
         return resultado
-    except:
-        raise HTTPException(status_code=500, detail='Erro interno no servidor')
+    except Exception as erro:
+        raise erro

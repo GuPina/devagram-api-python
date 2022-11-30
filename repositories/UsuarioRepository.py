@@ -20,7 +20,7 @@ def usuario_helper(usuario):
         "nome": usuario["nome"],
         "email": usuario ["email"],
         "senha": usuario["senha"],
-        "foto": usuario["foto"]
+        "foto": usuario["foto"] if "foto" in usuario else ""
     }
 
 
@@ -56,6 +56,11 @@ async def atualizar_usuario(id: str, dados_usuario: dict):
         usuario_atualizado = await usuario_collection.update_one(
             {"_id":ObjectId(id)}, {"$set": dados_usuario}
         )
+
+        usuario_encontrado = await usuario_collection.find_one({
+            {"_id": ObjectId(id)}
+        })
+
         return usuario_helper(usuario_atualizado)
 async def deletar_usuario(id: str):
     usuario = await usuario_collection.find_one({"_id": ObjectId(id)})
