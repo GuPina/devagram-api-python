@@ -38,3 +38,7 @@ class PostagemModel(BaseModel):
                     "legenda": "string",
                 }
             }
+
+
+class PostagemCriarModel:
+    pass

@@ -6,14 +6,11 @@ from fastapi import APIRouter, Body, HTTPException, Depends, Header, UploadFile
 from middlewares.JWTMiddelewares import verificar_token
 from models.UsuarioModel import UsuarioCriarModel
 from services.AuthService import decodificar_token_jwt
-from services.UsuariosService import (
-    registar_usuario,
-    buscar_usuario_logado
-
+from services.UsuariosService import UsuarioService
 )
 
 router = APIRouter()
-
+UsuarioService = UsuarioService()
 
 @router.post("/", response_description="Rota para criar um novo Usúario.")
 async def rota_criar_usuario(file: UploadFile, usuario: UsuarioCriarModel = Depends(UsuarioCriarModel)):
@@ -22,7 +19,7 @@ async def rota_criar_usuario(file: UploadFile, usuario: UsuarioCriarModel = Depe
         with open(caminho_foto, 'wb+') as arquivo:
             arquivo.write(file.file.read())
 
-        resultado= await registar_usuario(usuario, caminho_foto)
+        resultado= await usuarioService.registar_usuario(usuario, caminho_foto)
 
         os.remove(caminho_foto)
 
@@ -50,7 +47,7 @@ async def buscar_info_usuario_logado(Authorization: str = Header(default='')):
         return {
             "mensagem": "teste"
         }
-        resposta = await buscar_usuario_logado(payload["usuario_id"])
+        resposta = await usuarioService.buscar_usuario_logado(payload["usuario_id"])
 
         if not resultado ['status'] == 200:
             raise HTTPException(status_code=resultado['status'], detail=resultado['mensagem'])
